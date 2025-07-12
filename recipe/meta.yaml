@@ -50,28 +50,25 @@ test:
     - pyproject.toml
   commands:
     - pip check
-    # check that pip gets the correct version 
+    # Check that pip gets the correct version 
     - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
-    # move tests in the root folder (where pyproject.toml is)
+    # Move tests in the root folder (where pyproject.toml is)
     - move gh_src\tests tests  # [win]
     - mv gh_src/tests tests    # [not win]
-    # configure flags and docker image name
+    # Configure flags and docker image name (for unix only)
     # see: https://github.com/aio-libs/aiokafka/blob/master/Makefile#L3-L6
-    - set FLAGS=--maxfail=3    # [win]
-    - set SCALA_VERSION=2.13   # [win]
-    - set KAFKA_VERSION=2.8.1  # [win]
-    - set DOCKER_IMAGE=aiolibs/kafka:%SCALA_VERSION%_%KAFKA_VERSION%  # [win]
     - export FLAGS=--maxfail=3    # [not win]
     - export SCALA_VERSION=2.13   # [not win]
     - export KAFKA_VERSION=2.8.1  # [not win]
     - export DOCKER_IMAGE=aiolibs/kafka:$(SCALA_VERSION)_$(KAFKA_VERSION)  # [not win]
     - export LOG_FORMAT="%(asctime)s %(levelname)s %(message)s"            # [not win]    
     # Invoke tests like from the Makefile
-    - echo %DOCKER_IMAGE%   # [win]
-    - echo $(DOCKER_IMAGE)  # [not win]
     # see: https://github.com/aio-libs/aiokafka/blob/master/Makefile#L59
-    # remove log-format for win as it was problematic, the standard format is fine.
-    - pytest -s -v --log-level DEBUG --docker-image=%DOCKER_IMAGE% %FLAGS% tests    # [win]
+    #
+    # Remove log-format for win as it was problematic, the standard format is fine.
+    # Docker is not available on Windows, do not pass a docker image
+    # to skip its tests (they are fine on unix).
+    - pytest -s -v --log-level DEBUG %FLAGS% tests    # [win]
     - pytest -s -v --log-format="$LOG_FORMAT" --log-level DEBUG --docker-image=$(DOCKER_IMAGE) $(FLAGS) tests  # [not win]
 
 about:
