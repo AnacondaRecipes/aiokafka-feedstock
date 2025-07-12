@@ -25,6 +25,7 @@ requirements:
     - python
     - pip
     - setuptools >=77
+    - wheel
     - zlib
   run:
     - python
@@ -82,6 +83,7 @@ about:
   description: |
     AIOKafkaProducer is a high-level, asynchronous message producer.
   dev_url: https://github.com/aio-libs/aiokafka
+  doc_url: https://aiokafka.readthedocs.io
 
 extra:
   recipe-maintainers:
