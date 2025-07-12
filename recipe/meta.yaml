@@ -6,41 +6,72 @@ package:
   version: {{ version }}
 
 source:
-  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: 62423895b866f95b5ed8d88335295a37cc5403af64cb7cb0e234f88adc2dff94
+  - url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+    sha256: 62423895b866f95b5ed8d88335295a37cc5403af64cb7cb0e234f88adc2dff94
+  - url: https://github.com/aio-libs/aiokafka/archive/refs/tags/v{{ version }}.tar.gz
+    sha256: d71e708393708d00524bd522caabde8b3b488c6fd6e8b96662a60510c22d9f99
+    folder: gh_src
 
 build:
-  number: 1
-  script: {{ PYTHON }} -m pip install . -vv
-  skip: true  # [win]
+  number: 0
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
 
 requirements:
   build:
-    - python                                 # [build_platform != target_platform]
-    - cross-python_{{ target_platform }}     # [build_platform != target_platform]
-    - cython >=3.0.5                         # [build_platform != target_platform]
-    - zlib                                   # [build_platform != target_platform]
     - {{ compiler('c') }}
-    - {{ stdlib("c") }}
+    # - {{ stdlib('c') }}
   host:
     - cython >=3.0.5
     - python
     - pip
-    - setuptools
+    - setuptools >=77
     - zlib
   run:
     - python
     - async-timeout
     - packaging
-    - typing-extensions
+    - typing-extensions >=4.10.0
+  run_constrained:
+    - cramjam >=2.8.0
 
 test:
   imports:
     - aiokafka
   requires:
     - pip
+    - pytest >=8.3.3
+    - pytest-asyncio >=0.24.0
+    - pytest-mock >=3.14.0
+    - docker-py >=7.1.0
+    - cramjam >=2.9.0
+  source_files:
+    - gh_src/tests
+    - pyproject.toml
   commands:
     - pip check
+    # check that pip gets the correct version 
+    - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
+    # move tests in the root folder (where pyproject.toml is)
+    - move gh_src\tests tests  # [win]
+    - mv gh_src/tests tests    # [not win]
+    # configure flags and docker image name
+    # see: https://github.com/aio-libs/aiokafka/blob/master/Makefile#L3-L6
+    - set FLAGS=--maxfail=3    # [win]
+    - set SCALA_VERSION=2.13   # [win]
+    - set KAFKA_VERSION=2.8.1  # [win]
+    - set DOCKER_IMAGE=aiolibs/kafka:%SCALA_VERSION%_%KAFKA_VERSION%  # [win]
+    - export FLAGS=--maxfail=3    # [not win]
+    - export SCALA_VERSION=2.13   # [not win]
+    - export KAFKA_VERSION=2.8.1  # [not win]
+    - export DOCKER_IMAGE=aiolibs/kafka:$(SCALA_VERSION)_$(KAFKA_VERSION)  # [not win]
+    - export LOG_FORMAT="%(asctime)s %(levelname)s %(message)s"            # [not win]    
+    # Invoke tests like from the Makefile
+    - echo %DOCKER_IMAGE%   # [win]
+    - echo $(DOCKER_IMAGE)  # [not win]
+    # see: https://github.com/aio-libs/aiokafka/blob/master/Makefile#L59
+    # remove log-format for win as it was problematic, the standard format is fine.
+    - pytest -s -v --log-level DEBUG --docker-image=%DOCKER_IMAGE% %FLAGS% tests    # [win]
+    - pytest -s -v --log-format="$LOG_FORMAT" --log-level DEBUG --docker-image=$(DOCKER_IMAGE) $(FLAGS) tests  # [not win]
 
 about:
   home: https://github.com/aio-libs/aiokafka
@@ -48,7 +79,6 @@ about:
   license_family: Apache
   license_file: LICENSE
   summary: asyncio client for Kafka
-
   description: |
     AIOKafkaProducer is a high-level, asynchronous message producer.
   dev_url: https://github.com/aio-libs/aiokafka
