@@ -14,6 +14,7 @@ source:
 
 build:
   number: 0
+  skip: True  # [py<39]
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
 
 requirements:
@@ -25,8 +26,7 @@ requirements:
     - python
     - pip
     - setuptools >=77
-    - wheel
-    - zlib
+    - zlib {{ zlib }}
   run:
     - python
     - async-timeout
