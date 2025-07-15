@@ -57,11 +57,8 @@ test:
     - mv gh_src/tests tests    # [not win]
     # Configure flags and docker image name (for unix only)
     # see: https://github.com/aio-libs/aiokafka/blob/master/Makefile#L3-L6
-    - export FLAGS=--maxfail=3    # [not win]
-    - export SCALA_VERSION=2.13   # [not win]
-    - export KAFKA_VERSION=2.8.1  # [not win]
-    - export DOCKER_IMAGE=aiolibs/kafka:$(SCALA_VERSION)_$(KAFKA_VERSION)  # [not win]
-    - export LOG_FORMAT="%(asctime)s %(levelname)s %(message)s"            # [not win]    
+    - set FLAGS=--maxfail=3     # [win]
+    - export FLAGS=--maxfail=3  # [not win]
     # Invoke tests like from the Makefile
     # see: https://github.com/aio-libs/aiokafka/blob/master/Makefile#L59
     #
@@ -69,7 +66,14 @@ test:
     # Docker is not available on Windows, do not pass a docker image
     # to skip its tests (they are fine on unix).
     - pytest -s -v --log-level DEBUG %FLAGS% tests    # [win]
-    - pytest -s -v --log-format="$LOG_FORMAT" --log-level DEBUG --docker-image=$(DOCKER_IMAGE) $(FLAGS) tests  # [not win]
+    # We decided to skip the docker tests for unix as well on our build system.
+    # To run tests locally comment this line and un-comment the lines below it.
+    - export LOG_FORMAT="%(asctime)s %(levelname)s %(message)s"                 # [not win]    
+    - pytest -s -v --log-format="$LOG_FORMAT" --log-level DEBUG $(FLAGS) tests  # [not win]
+    # - export SCALA_VERSION=2.13   # [not win]
+    # - export KAFKA_VERSION=2.8.1  # [not win]
+    # - export DOCKER_IMAGE=aiolibs/kafka:$(SCALA_VERSION)_$(KAFKA_VERSION)  # [not win]
+    # - pytest -s -v --log-format="$LOG_FORMAT" --log-level DEBUG --docker-image=$(DOCKER_IMAGE) $(FLAGS) tests  # [not win]
 
 about:
   home: https://github.com/aio-libs/aiokafka
