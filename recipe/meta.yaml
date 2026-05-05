@@ -1,20 +1,20 @@
 {% set name = "aiokafka" %}
-{% set version = "0.12.0" %}
+{% set version = "0.14.0" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  - url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-    sha256: 62423895b866f95b5ed8d88335295a37cc5403af64cb7cb0e234f88adc2dff94
+  - url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+    sha256: 8ffdc945798ba4d3d132b705d4244d0a1f493925efb57c637a2ca88ee82794e1
   - url: https://github.com/aio-libs/aiokafka/archive/refs/tags/v{{ version }}.tar.gz
-    sha256: d71e708393708d00524bd522caabde8b3b488c6fd6e8b96662a60510c22d9f99
+    sha256: 750e128e778690d9f33d04d7fcdebcf882230c2ced204a781245f1e6850dbf5c
     folder: gh_src
 
 build:
   number: 0
-  skip: True  # [py<39]
+  skip: true  # [py<39]
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
 
 requirements:
@@ -50,14 +50,14 @@ test:
     - pyproject.toml
   commands:
     - pip check
-    # Check that pip gets the correct version 
+    # Check that pip gets the correct version
     - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
     # Move tests in the root folder (where pyproject.toml is)
     - move gh_src\tests tests  # [win]
-    - mv gh_src/tests tests    # [not win]
+    - mv gh_src/tests tests  # [not win]
     # Configure flags and docker image name (for unix only)
     # see: https://github.com/aio-libs/aiokafka/blob/master/Makefile#L3-L6
-    - set FLAGS=--maxfail=3     # [win]
+    - set FLAGS=--maxfail=3  # [win]
     - export FLAGS=--maxfail=3  # [not win]
     # Invoke tests like from the Makefile
     # see: https://github.com/aio-libs/aiokafka/blob/master/Makefile#L59
@@ -65,10 +65,10 @@ test:
     # Remove log-format for win as it was problematic, the standard format is fine.
     # Docker is not available on Windows, do not pass a docker image
     # to skip its tests (they are fine on unix).
-    - pytest -s -v --log-level DEBUG %FLAGS% tests    # [win]
+    - pytest -s -v --log-level DEBUG %FLAGS% tests  # [win]
     # We decided to skip the docker tests for unix as well on our build system.
     # To run tests locally comment this line and un-comment the lines below it.
-    - export LOG_FORMAT="%(asctime)s %(levelname)s %(message)s"                 # [not win]    
+    - export LOG_FORMAT="%(asctime)s %(levelname)s %(message)s"  # [not win]
     - pytest -s -v --log-format="$LOG_FORMAT" --log-level DEBUG $(FLAGS) tests  # [not win]
     # - export SCALA_VERSION=2.13   # [not win]
     # - export KAFKA_VERSION=2.8.1  # [not win]
