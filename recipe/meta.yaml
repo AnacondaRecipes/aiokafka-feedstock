@@ -8,7 +8,8 @@ package:
 # Use the Git tag archive, not the PyPI sdist: upstream's Publish workflow runs
 # `pip install` on Ubuntu before `build --sdist`, which ships Linux-generated *.c
 # into the sdist and breaks MSVC (arpa/inet.h). The git tree has only .pyx sources;
-# Cython runs per platform at conda-build time. Do not switch to PyPI.
+# Cython runs per platform at conda-build time.
+# Do not switch to PyPI.
 source:
   url: https://github.com/aio-libs/aiokafka/archive/refs/tags/v{{ version }}.tar.gz
   sha256: 750e128e778690d9f33d04d7fcdebcf882230c2ced204a781245f1e6850dbf5c
